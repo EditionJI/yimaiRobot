@@ -1,11 +1,18 @@
 import re
 import time
+import pandas as pd
 from DrissionPage import ChromiumPage
 
 def process_keyword(page, keyword):
     """
     处理单个关键词的完整流程
     """
+    # 确保 keyword 是字符串
+    keyword = str(keyword).strip()
+    if not keyword:
+        print("跳过空关键词")
+        return
+        
     print(f"\n=== 开始处理关键词: {keyword} ===")
     
     # 1. 定位到“英文名”栏并在后面的输入框输入
@@ -89,7 +96,7 @@ def process_keyword(page, keyword):
         
         if pagination_ele:
             text = pagination_ele.text
-            print(f"检测到分页信息: {text}")
+            # print(f"检测到分页信息: {text}") # 日志太冗长，已移除
             matches = re.findall(r'共\s*(\d+)\s*条', text)
             if matches:
                 count = int(matches[-1])
@@ -342,10 +349,31 @@ def main():
     page = ChromiumPage()
     print("已连接到浏览器")
     
-    keywords = ["hus", "vow books"]
-    for kw in keywords:
+    # 读取 Excel
+    excel_path = r"d:\AI Agent projects\yimaiRPA\11月亚马逊筛选数据.xlsx"
+    try:
+        # header=None 表示没有表头，读取所有行
+        df = pd.read_excel(excel_path, header=None)
+        # 假设关键词在第一列 (索引 0)
+        # dropna() 去除空值
+        keywords = df.iloc[:, 0].dropna().astype(str).tolist()
+        print(f"成功读取 Excel，共找到 {len(keywords)} 个关键词")
+    except Exception as e:
+        print(f"读取 Excel 文件失败: {e}")
+        return
+
+    # 从第 1852 个词开始
+    start_from = 1852
+    
+    for index, kw in enumerate(keywords):
+        current_num = index + 1
+        if current_num < start_from:
+            continue
+            
+        print(f"\n[{current_num}/{len(keywords)}] 正在处理: {kw}")
         process_keyword(page, kw)
-        time.sleep(1) # 任务间隔
+        # 任务间隔，防止操作过快
+        time.sleep(2)
 
 if __name__ == "__main__":
     main()
