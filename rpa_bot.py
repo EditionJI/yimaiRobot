@@ -1,7 +1,27 @@
 import re
 import time
 import pandas as pd
+import ctypes
+import random
 from DrissionPage import ChromiumPage
+
+def prevent_lock_screen():
+    """
+    通过微小移动鼠标防止系统锁屏
+    """
+    try:
+        # 移动鼠标相对位置 (dx, dy)
+        # MOUSEEVENTF_MOVE = 0x0001
+        # 随机微小移动
+        x = random.choice([-1, 1])
+        y = random.choice([-1, 1])
+        ctypes.windll.user32.mouse_event(0x0001, x, y, 0, 0)
+        time.sleep(0.05)
+        # 移回来
+        ctypes.windll.user32.mouse_event(0x0001, -x, -y, 0, 0)
+        # print("执行防锁屏鼠标抖动") # 调试日志
+    except Exception as e:
+        print(f"防锁屏操作失败: {e}")
 
 def process_keyword(page, keyword):
     """
@@ -372,6 +392,10 @@ def main():
             
         print(f"\n[{current_num}/{len(keywords)}] 正在处理: {kw}")
         process_keyword(page, kw)
+        
+        # 执行防锁屏操作
+        prevent_lock_screen()
+        
         # 任务间隔，防止操作过快
         time.sleep(2)
 
